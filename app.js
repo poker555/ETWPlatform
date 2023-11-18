@@ -203,8 +203,7 @@ app.get("/dashboard", async (req, res) => {
     const moment = require("moment");
     const daystart = moment().startOf("day");
     const dayend = moment();
-    console.log(daystart);
-    console.log(dayend);
+    
 
     const result = await client.search({
       index: "winlogbeat-2023.11",
@@ -252,8 +251,6 @@ app.get("/dashboard", async (req, res) => {
         hourlychartdata.push(0);
       }
     });
-    console.log(hourlylabel);
-    console.log(hourlychartdata);
     /*hourly.forEach((item) => {
       hourlylabel.push(item.key_as_string);
       hourlychartdata.push(item.doc_count);
@@ -294,10 +291,48 @@ app.get("/dashboard", async (req, res) => {
     res.status(500).json({ error: "Elasticsearch 查询错误" });
   }
 
+  //
+  try{
+
+    const result = await client.search({
+      index: "winlogbeat-2023.11",
+      size: 0,
+      body: {
+        aggs: {
+          event_ids: {
+            terms: {
+              field: "event.code",
+              size: 1000,
+              
+            },
+          },
+        },
+      },
+    });
+
+    const eventid_bucket = result.aggregations.event_ids.buckets
+    console.log(eventid_bucket)
+    const eventid_label = []
+    const eventid_count = []
+
+    eventid_bucket.forEach((item) =>{
+      eventid_label.push(item.key)
+      eventid_count.push(item.doc_count)
+    }
+    )
+    res.locals.eventid_label = eventid_label;
+    res.locals.eventid_count = eventid_count;
+    console.log(eventid_label)
+    console.log(eventid_count)
+
+  }catch(error){
+    console.log("找不到event id")
+  }
+
   res.render("dashboard");
 });
 
-//查各種destinationIp有幾個(poker看這邊)
+//查各種destinationIp有幾個(poker看這邊) 收到
 app.get("/getDestinationIp", async (req, res) => {
   try {
     const aggs = {
