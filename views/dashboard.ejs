@@ -58,217 +58,40 @@
         </ul>
       </div>
     </nav>
-
     <div class="container">
       <div class="row"><h1>Dashboard</h1></div>
       <div class="row">
-        <div class="col-md-8">
-          <div class="shadow p-4 mb-4 bg-body-tertiary rounded-3">
-            <form action="/" method="get">
-              <label for="startDate">開始日期:</label>
-              <input type="date" name="startDate" id="startDate" required />
-              <label for="endDate">結束日期:</label>
-              <input type="date" name="endDate" id="endDate" required />
-              <label for="timeRange">選擇時間範圍：</label>
-              <select name="timeRange" id="timeRange">
-                <option value="month">每月</option>
-                <option value="week">每周</option>
-                <option value="day">每日</option>
-                <option value="hour">每小時</option>
-              </select>
-              <button type="submit">搜索</button>
-            </form>
-
-            <div><canvas id="logChart"></canvas></div>
-          </div>
-        </div>
-        <div class="col-md-4">
-          <div class="shadow p-4 mb-4 bg-body-tertiary rounded-3">
-            <div class="column">
-              <% if (logsnullornot) { %>
-              <h3>電腦很安全</h3>
+          <div class="table-responsive">
+              <% if(data && data.length > 0) { %>
+                  <table class="table table-striped">
+                      <thead>
+                          <tr>
+                              <th>Process Name</th>
+                              <th>Process ID</th>
+                              <th>Command Line</th>
+                              <th>Timestamp</th>
+                              <th>Event Type</th>
+                          </tr>
+                      </thead>
+                      <tbody>
+                          <% data.forEach(function(doc) { %>
+                              <tr>
+                                  <td><%= doc.processName %></td>
+                                  <td><%= doc.processId %></td>
+                                  <td><%= doc.commandLine.length > 50 ? doc.commandLine.substring(0, 47) + '...' : doc.commandLine %></td>
+                                  <td><%= doc.timestamp %></td>
+                                  <td><%= doc.eventType %></td>
+                              </tr>
+                          <% }); %>
+                      </tbody>
+                  </table>
               <% } else { %>
-              <h3>這周偵測到異常IP共<%= logslength %>筆</h3>
+                  <p>No data found.</p>
               <% } %>
-            </div>
-            <div class="container w-75">
-              <% if (logsnullornot) { %>
-              <a href="/strangelog"
-                ><img
-                  src="/images/shell.png"
-                  alt="True Image"
-                  class="img-fluid"
-              /></a>
-              <% } else { %>
-              <a href="/strangelog"
-                ><img
-                  src="/images/danger.png"
-                  alt="False Image"
-                  class="img-fluid"
-              /></a>
-              <% } %>
-            </div>
           </div>
-        </div>
       </div>
+  </div>
 
-      <div class="row justify-content-md-center">
-        <div class="col-md-3">
-          <div class="shadow p-4 mb-4 bg-body-tertiary rounded-3">
-            <h2>IP Address Information</h2>
-            <ul class="list-group">
-              <% topIps.forEach(function(ipInfo) { %>
-              <li class="list-group-item">
-                IP: <%= ipInfo.ip %>, Count: <%= ipInfo.count %>
-              </li>
-              <% }); %>
-            </ul>
-          </div>
-        </div>
-        <div class="col-md-9">
-          <div class="shadow p-3 mb-4 bg-body-tertiary rounded-3">
-            <h1>地圖位置</h1>
-            <div id="mapid" style="height: 500px"></div>
-          </div>
-        </div>
-      </div>
-      <div class="row">
-        <div class="col-md-6">
-          <div class="shadow p-3 mb-4 bg-body-tertiary rounded-3">
-            <h1>Top Event IDs</h1>
-            <ul class="list-group">
-              <% topEventIds.forEach(function(event) { %>
-              <li class="list-group-item">
-                Event ID: <%= event.eventId %>, Count: <%= event.count %>
-              </li>
-              <% }); %>
-            </ul>
-          </div>
-          <div class="shadow p-3 mb-4 bg-body-tertiary rounded-3">
-            <h2>level</h2>
-            <ul class="list-group">
-              <% toplevels.forEach(function(levelInfo) { %>
-              <li class="list-group-item">
-                level: <%= levelInfo.level %>, Count: <%= levelInfo.count %>
-              </li>
-              <% }); %>
-            </ul>
-          </div>
-        </div>
-        <div class="col-md-6">
-          <div class="shadow p-3 mb-4 bg-body-tertiary rounded-3">
-            <h2>Event Id Chart</h2>
-            <div class="d-flex justify-content-center">
-              <canvas id="event_idChart"></canvas>
-            </div>
-          </div>
-        </div>
-      </div>
     </div>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script>
-            let ipdata = []
-
-
-            const eventidlabel = <%- JSON.stringify(eventid_label) %>;
-            const eventidcount = <%- JSON.stringify(eventid_count) %>;
-            const labelforbar = <%- JSON.stringify(barlabel) %>;
-            const dataforbar = <%- JSON.stringify(bardata) %>;
-            const logsnullornot = <%- JSON.stringify(logsnullornot) %>;
-            const logslength = <%- JSON.stringify(logslength) %>;
-            ipdata = <%- JSON.stringify(topIps) %>;
-
-
-
-
-            const event_idChart = document.getElementById('event_idChart').getContext('2d');
-            const logChart = document.getElementById('logChart').getContext('2d');
-
-            new Chart(event_idChart,{
-              type: 'pie',
-              data: {
-                labels:eventidlabel,
-                datasets:[{
-                  labels:'event id',
-                  data:eventidcount,
-                  backgroundColor:[
-                  'blue',
-                    'orange',
-                    'green',
-                    'red',
-                    'purple',
-                    'brown',
-                    'pink',
-                    'gray',
-                    'olive',
-                    'cyan',
-                    'aliceblue',
-                    'antiquewhite',
-                    'aqua',
-                    'aquamarine',
-                    'azure',
-                    'beige',
-                    'bisque',
-                    'black',
-                    'blanchedalmond',
-                    'blue',
-                    'blueviolet',
-                    'brown',
-                    'burlywood',
-                    'cadetblue'],
-                    borderColor: '#fff',
-                    borderWidth: 1
-                }]
-
-              },
-              options: {
-                responsive: false, // 自動調整大小
-                maintainAspectRatio: false, // 保持比例
-              }
-            })
-
-            new Chart(logChart,{
-              type:'bar',
-              data:{
-                labels:labelforbar,
-                datasets:[{
-                  label:'doc_count',
-                  data:dataforbar
-                }]
-              }
-            })
-
-            var result = ipdata.reduce(function(acc, currentValue) {
-          // 只處理country不為'Unknown'的數據
-          if (currentValue.country !== 'Unknown') {
-              if (!acc[currentValue.country]) {
-                  acc[currentValue.country] = {
-                      country: currentValue.country,
-                      latitude: currentValue.latitude,
-                      longitude: currentValue.longitude,
-                      total_count: 0
-                  };
-              }
-              acc[currentValue.country].total_count += currentValue.count;
-          }
-          return acc;
-      }, {});
-
-      // 將結果轉換為陣列
-      var summarizedData = Object.values(result);
-      var map = L.map('mapid').setView([20, 0], 2); // 初始化地圖並設置視圖
-
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-          maxZoom: 19,
-          attribution: '© OpenStreetMap contributors'
-      }).addTo(map);
-
-      summarizedData.forEach(function(item) {
-          if (item.latitude !== 'Unknown' && item.longitude !== 'Unknown') {
-              var marker = L.marker([item.latitude, item.longitude]).addTo(map);
-              marker.bindPopup("<b>" + item.country + "</b><br>Total count: " + item.total_count);
-          }
-      });
-    </script>
   </body>
 </html>

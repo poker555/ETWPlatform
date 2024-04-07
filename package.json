@@ -9,7 +9,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@elastic/elasticsearch": "^8.10.0",
+    "@elastic/elasticsearch": "7.17",
     "@maxmind/geoip2-node": "^4.2.0",
     "body-parser": "^1.20.2",
     "dotenv": "^16.3.1",
