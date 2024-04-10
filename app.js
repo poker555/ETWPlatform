@@ -48,6 +48,30 @@ app.get("/", async (req, res) => {
   }
 });
 
+app.get("/filesystemwatcher", async (req, res) => {
+  try{
+    const result = await client.search({
+      index: 'file-system-events',
+      body: {
+        query: {
+          match_all: {}
+        }
+      }
+    });
+
+    const hits = result.body.hits.hits;
+    const data = hits.map(hit => hit._source);
+    res.render("filesystemwatcher", { data });
+    
+  }catch(error){
+    console.error("Elasticsearch查询错误:", error);
+    res.render("filesystemwatcher", {
+      error: "Failed to retrieve logs.",
+      data: [] // 确保在出错时传递一个空数组
+    });
+  }
+}
+
 
 //port部分
 const port = 1234;
