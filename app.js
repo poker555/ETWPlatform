@@ -22,6 +22,22 @@ const client = new Client({ node: "http://localhost:9200" });
 app.get("/", async (req, res) => {
   try {
     const result = await client.search({
+      
+    });
+
+    res.render("dashboard", { data });
+  } catch (error) {
+    console.error("Elasticsearch查询错误:", error);
+    res.render("dashboard", {
+      error: "Failed to retrieve logs.",
+      data: [] // 确保在出错时传递一个空数组
+    });
+  }
+});
+
+app.get("/ProcessMonitor", async (req, res) => {
+  try {
+    const result = await client.search({
       index: 'etw-events',
       body: {
         query: {
@@ -38,10 +54,35 @@ app.get("/", async (req, res) => {
     const data = hits.map(hit => hit._source);
 
     // 传递数据给EJS模板
-    res.render("dashboard", { data });
+    res.render("ProcessMonitor", { data });
   } catch (error) {
     console.error("Elasticsearch查询错误:", error);
-    res.render("dashboard", {
+    res.render("ProcessMonitor", {
+      error: "Failed to retrieve logs.",
+      data: [] // 确保在出错时传递一个空数组
+    });
+  }
+});
+
+app.get("/tcpip", async (req, res) => {
+  try{
+    const result = await client.search({
+      index: 'tcpip-events',
+      body: {
+        query: {
+          match_all: {}
+        },
+        size: 100 // 示例：限制返回的文档数量为100
+      }
+    });
+
+    const hits = result.body.hits.hits;
+    const data = hits.map(hit => hit._source);
+    res.render("tcpip", { data });
+
+  }catch(error){
+    console.error("Elasticsearch查询错误:", error);
+    res.render("tcpip", {
       error: "Failed to retrieve logs.",
       data: [] // 确保在出错时传递一个空数组
     });
@@ -70,7 +111,7 @@ app.get("/filesystemwatcher", async (req, res) => {
       data: [] // 确保在出错时传递一个空数组
     });
   }
-}
+});
 
 
 //port部分
