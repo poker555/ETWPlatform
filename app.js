@@ -24,6 +24,8 @@ app.get("/", async (req, res) => {
     const result = await client.search({
       
     });
+    const hits = result.body.hits.hits;
+    const data = hits.map(hit => hit._source);
 
     res.render("dashboard", { data });
   } catch (error) {
@@ -36,10 +38,19 @@ app.get("/", async (req, res) => {
 });
 
 app.get("/ProcessMonitor", async (req, res) => {
+  const sortField = req.query.sortField || "timestamp";
+  const sortOrder = req.query.sortOrder || "asc";
   try {
     const result = await client.search({
       index: 'etw-events',
       body: {
+        sort: [
+          {
+            [sortField]: {
+              order: sortOrder
+            }
+          }
+        ],
         query: {
           match_all: {}
         },
@@ -47,19 +58,18 @@ app.get("/ProcessMonitor", async (req, res) => {
       }
     });
 
-    // 处理查询结果
     const hits = result.body.hits.hits;
-
-    // 准备传递给EJS模板的数据
     const data = hits.map(hit => hit._source);
 
     // 传递数据给EJS模板
-    res.render("ProcessMonitor", { data });
+    res.render("ProcessMonitor", { data, sortField, sortOrder });
   } catch (error) {
     console.error("Elasticsearch查询错误:", error);
     res.render("ProcessMonitor", {
       error: "Failed to retrieve logs.",
-      data: [] // 确保在出错时传递一个空数组
+      data: [], // 确保在出错时传递一个空数组
+      sortField,
+      sortOrder
     });
   }
 });
@@ -90,28 +100,40 @@ app.get("/tcpip", async (req, res) => {
 });
 
 app.get("/filesystemwatcher", async (req, res) => {
-  try{
+  const sortField = req.query.sortField === 'eventType' ? 'eventType.keyword' : (req.query.sortField || "timestamp");
+  const sortOrder = req.query.sortOrder || "asc";
+  try {
     const result = await client.search({
       index: 'file-system-events',
       body: {
+        sort: [
+          {
+            [sortField]: {
+              order: sortOrder
+            }
+          }
+        ],
         query: {
           match_all: {}
-        }
+        },
+        size: 100 // 示例：限制返回的文档数量为100
       }
     });
 
     const hits = result.body.hits.hits;
     const data = hits.map(hit => hit._source);
-    res.render("filesystemwatcher", { data });
-    
-  }catch(error){
+    res.render("filesystemwatcher", { data, sortField: req.query.sortField, sortOrder });
+  } catch (error) {
     console.error("Elasticsearch查询错误:", error);
     res.render("filesystemwatcher", {
       error: "Failed to retrieve logs.",
-      data: [] // 确保在出错时传递一个空数组
+      data: [], // 确保在出错时传递一个空数组
+      sortField: req.query.sortField,
+      sortOrder
     });
   }
 });
+
 
 
 //port部分
