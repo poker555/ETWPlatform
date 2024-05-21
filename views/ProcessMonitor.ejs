@@ -72,7 +72,9 @@
                                 <th class="sortable <%= sortField === 'timestamp' ? sortOrder : '' %>">
                                     <a href="?sortField=timestamp&sortOrder=<%= sortField === 'timestamp' && sortOrder === 'asc' ? 'desc' : 'asc' %>">Timestamp</a>
                                 </th>
-                                <th>Event Type</th>
+                                <th class="sortable <%= sortField === 'eventType' ? sortOrder : '' %>">
+                                    <a href="?sortField=eventType&sortOrder=<%= sortField === 'eventType' && sortOrder === 'asc' ? 'desc' : 'asc' %>">Event Type</a>
+                                </th>
                             </tr>
                         </thead>
                         <tbody>
