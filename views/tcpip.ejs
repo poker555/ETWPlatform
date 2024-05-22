@@ -26,6 +26,29 @@
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+      .sortable {
+          cursor: pointer;
+      }
+      .asc::after {
+          content: ' ▲';
+      }
+      .desc::after {
+          content: ' ▼';
+      }
+      .modal-body {
+          word-wrap: break-word; /* 使内容自动换行 */
+
+      }
+      .clickable {
+          cursor: pointer;
+          color: #007bff /* 蓝色 */ !important;
+          text-decoration: none /* 无下划线 */ !important;
+      }
+      .clickable:hover {
+          color: #0056b3; /* 鼠标悬停时更深的蓝色 */
+      }
+  </style>
   </head>
   <body>
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
@@ -70,7 +93,9 @@
                               <th>SourceIPv4Address</th>
                               <th>DestIPv4Adress</th>
                               <th>isBlacklisted</th>
-                              <th>Timestamp</th>
+                              <th class="sortable <%= sortField === 'timestamp' ? sortOrder : '' %>">
+                                <a href="?sortField=timestamp&sortOrder=<%= sortField === 'timestamp' && sortOrder === 'asc' ? 'desc' : 'asc' %>">Timestamp</a>
+                              </th>
                           </tr>
                       </thead>
                       <tbody>

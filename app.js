@@ -2,6 +2,7 @@ const express = require("express");
 const session = require("express-session");
 const bodyParser = require("body-parser");
 const app = express();
+const moment = require('moment-timezone');
 require("dotenv").config();
 const { Client } = require("@elastic/elasticsearch");
 
@@ -40,7 +41,6 @@ app.get("/", async (req, res) => {
 app.get("/ProcessMonitor", async (req, res) => {
   const sortField = req.query.sortField === 'eventType' ? 'eventType.keyword' : (req.query.sortField || "timestamp");
   const sortOrder = req.query.sortOrder || "asc";
-  console.log(`Sorting by: ${sortField} in ${sortOrder} order`);
   try {
     const result = await client.search({
       index: 'etw-events',
@@ -60,7 +60,16 @@ app.get("/ProcessMonitor", async (req, res) => {
     });
 
     const hits = result.body.hits.hits;
-    const data = hits.map(hit => hit._source);
+    const data = hits.map(hit => {
+      const source = hit._source
+      if (source.timestamp) {
+        source.timestamp = moment(source.timestamp).tz('Asia/Taipei').format('YYYY-MM-DD HH:mm:ss');
+      }
+
+
+      return source;
+    });
+    
 
     // 传递数据给EJS模板
     res.render("ProcessMonitor", { data, sortField: req.query.sortField, sortOrder });
@@ -77,10 +86,19 @@ app.get("/ProcessMonitor", async (req, res) => {
 
 
 app.get("/tcpip", async (req, res) => {
+  const sortField = req.query.sortField || "timestamp";
+  const sortOrder = req.query.sortOrder || "asc";
   try{
     const result = await client.search({
       index: 'tcpip-events',
       body: {
+        sort: [
+          {
+            [sortField]: {
+              order: sortOrder
+            }
+          }
+        ],
         query: {
           match_all: {}
         },
@@ -89,14 +107,23 @@ app.get("/tcpip", async (req, res) => {
     });
 
     const hits = result.body.hits.hits;
-    const data = hits.map(hit => hit._source);
-    res.render("tcpip", { data });
+    const data = hits.map(hit => {
+      const source = hit._source;
+      if (source.timestamp) {
+        source.timestamp = moment(source.timestamp).tz('Asia/Taipei').format('YYYY-MM-DD HH:mm:ss');
+      }
+      return source;
+    
+    });
+    res.render("tcpip", { data,sortField: req.query.sortField, sortOrder});
 
   }catch(error){
     console.error("Elasticsearch查询错误:", error);
     res.render("tcpip", {
       error: "Failed to retrieve logs.",
-      data: [] // 确保在出错时传递一个空数组
+      data: [], // 确保在出错时传递一个空数组
+      sortField: req.query.sortField,
+      sortOrder
     });
   }
 });
@@ -123,7 +150,14 @@ app.get("/filesystemwatcher", async (req, res) => {
     });
 
     const hits = result.body.hits.hits;
-    const data = hits.map(hit => hit._source);
+    const data = hits.map(hit => {
+      const source = hit._source
+      if (source.timestamp) {
+        source.timestamp = moment(source.timestamp).tz('Asia/Taipei').format('YYYY-MM-DD HH:mm:ss');
+      }
+      return source;
+    
+    });
     res.render("filesystemwatcher", { data, sortField: req.query.sortField, sortOrder });
   } catch (error) {
     console.error("Elasticsearch查询错误:", error);
