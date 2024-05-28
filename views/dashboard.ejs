@@ -24,74 +24,221 @@
       crossorigin="anonymous"
     ></script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+      @import url("https://fonts.googleapis.com/css2?family=Inconsolata:wght@300&display=swap");
+      @import url("https://fonts.googleapis.com/css2?family=Raleway:wght@100;200;600;700&display=swap");
+      @import url("https://fonts.googleapis.com/css2?family=Raleway:wght@100;200;600;700&family=Roboto+Mono:wght@100;400;600&display=swap");
 
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      body {
+        min-height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        color: #767676;
+      }
+      .wrapper {
+        width: 100%;
+        height: 100%;
+        min-height: 100vh;
+        position: relative;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        flex-wrap: wrap;
+        background-color: #1c2538;
+      }
+      .wrapper .card {
+        position: relative;
+        width: 300px;
+        height: 418px;
+        box-shadow: 20px 20px 50px rgba(0, 0, 0, 0.5);
+        border-radius: 15px;
+        margin: 30px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        border-top: 1px solid rgba(255, 255, 255, 0.5);
+        border-left: 1px solid rgba(255, 255, 255, 0.5);
+        backdrop-filter: blur(5px);
+        transform-style: preserve-3d;
+        transform: perspective(400px);
+        background-color: #f5f6f7;
+      }
+      .card.hackbox {
+        background-color: #141d2b;
+      }
+      .hb-heading {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
+      .hackbox-heading {
+        color: #9fef00;
+        font-family: "Raleway", sans-serif;
+        font-weight: 700;
+      }
+      .hackbox-span {
+        font-family: "Raleway", sans-serif;
+        font-family: 100;
+        color: #9fef00;
+        font-size: 2.5em;
+      }
+      .hackbox-heading:hover {
+        color: #ffe700;
+      }
+      .hackbox p {
+        color: #a4b1cd;
+      }
+      .hb {
+        color: #9fef00;
+      }
+      .hb:hover {
+        color: #fff;
+      }
+
+      .card.tryhackme {
+        background-color: #161e2d;
+      }
+      .tryhackme-heading {
+        color: #a6170e;
+        font-family: "Ubuntu Mono", monospace;
+      }
+
+      .tryhackme-heading:hover {
+        color: #fff;
+      }
+
+      .tryhackme p {
+        color: #8e929c;
+        font-family: "Ubuntu", sans-serif;
+      }
+      .tryhackme p:hover {
+        color: #fff;
+      }
+      .tr:hover {
+        color: #88cc14;
+      }
+      .tr {
+        color: #a6170e;
+      }
+
+      h2 {
+        color: #0a0a23;
+        font-size: 2.5rem;
+        text-align: center;
+        font-family: "Roboto-mono", sans-serif;
+      }
+      p {
+        color: #0a0a23;
+        margin: 20px 20px;
+        font-family: "Roboto-mono", sans-serif;
+        padding: 10px 20px;
+      }
+      ul {
+        list-style: none;
+        width: 100%;
+        display: flex;
+        justify-content: space-evenly;
+        padding-top: 30px;
+      }
+
+      li {
+        cursor: pointer;
+        width: 30px;
+        height: 30px;
+      }
+      i {
+        color: #0a0a23;
+        font-size: 2em;
+        transition: all 0.3s ease;
+      }
+      i:hover {
+        transform: translate3d(0, -12px, 22px);
+        color: #616171;
+      }
+      .material-icons-outlined {
+        color: #767676;
+      }
+
+      h2 {
+        transition: all 0.4s ease;
+      }
+      h2:hover {
+        transform: translate3d(0, -10px, 20px);
+        color: #616171;
+      }
+      h5 {
+        font-family: "Jost", sans-serif;
+      }
+      footer {
+        flex-wrap: wrap;
+      }
+      a {
+        text-decoration: none;
+      }
+      i {
+        margin-right: 10px;
+      }
+    </style>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   </head>
   <body>
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-      <a class="navbar-brand" href="/">日誌收容平台</a>
-      <button
-        class="navbar-toggler"
-        type="button"
-        data-toggle="collapse"
-        data-target="#navbarNav"
-        aria-controls="navbarNav"
-        aria-expanded="false"
-        aria-label="Toggle navigation"
-      >
-        <span class="navbar-toggler-icon"></span>
-      </button>
-      <div class="collapse navbar-collapse" id="navbarNav">
-        <ul class="navbar-nav">
-          <li class="nav-item">
-            <a class="nav-link" href="/ProcessMonitor">進程事件監控</a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" href="/filesystemwatcher">檔案監控</a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" href="/tcpip">TCPIP監控</a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" href="/logout">登出</a>
-          </li>
-        </ul>
-      </div>
-    </nav>
-    <div class="container">
-      <div class="row"><h1>Dashboard</h1></div>
-      <div class="row">
-          <div class="table-responsive">
-              <% if(data && data.length > 0) { %>
-                  <table class="table table-striped">
-                      <thead>
-                          <tr>
-                              <th>Process Name</th>
-                              <th>Process ID</th>
-                              <th>Command Line</th>
-                              <th>Timestamp</th>
-                              <th>Event Type</th>
-                          </tr>
-                      </thead>
-                      <tbody>
-                          <% data.forEach(function(doc) { %>
-                              <tr>
-                                  <td><%= doc.processName %></td>
-                                  <td><%= doc.processId %></td>
-                                  <td><%= doc.commandLine.length > 50 ? doc.commandLine.substring(0, 47) + '...' : doc.commandLine %></td>
-                                  <td><%= doc.timestamp %></td>
-                                  <td><%= doc.eventType %></td>
-                              </tr>
-                          <% }); %>
-                      </tbody>
-                  </table>
-              <% } else { %>
-                  <p>No data found.</p>
-              <% } %>
+      <div class="wrapper">
+        <div class="card tryhackme">
+          <div class="content"><a href="views\ProcessMonitor.ejs">
+              <h2 class="tryhackme-heading">Process監控</h2></a>
+            <p>
+              實時監控系統進程的啟動和停止，記錄進程名稱、ID 和命令行參數，幫助分析系統活動。
+            </p>
+            <ul class="list">
+              <li><a href="https://tryhackme.com/" target="_blank"><i class="fab fa-leanpub tr"></i></a></li>
+              <li><a href="https://tryhackme.com/leaderboards"><i class="fas fa-trophy tr"></i></a></li>
+              <li><a href="https://tryhackme.com/develop-rooms"><i class="fas fa-university tr"></i></a></li>
+            </ul>
           </div>
+        </div>
+        <div class="card hackbox">
+          <div class="content"><a href="https://academy.hackthebox.com/dashboard">
+              <div class="hb-heading">
+                <h2 class="hackbox-heading">TCPIP監控</h2>
+              </div></a>
+            <p>監控網絡流量，檢測和阻止黑名單 IP 地址的連接，保護系統安全。</p>
+            <ul class="list">
+              <li><a href="https://academy.hackthebox.com/"><i class="fas fa-cube hb"></i></a></li>
+              <li><a href="https://www.hackthebox.com/hacker/ctf"><i class="fas fa-flag hb"></i></a></li>
+              <li><a href="https://gitlab.com/" target="_blank"><i class="fas fa-graduation-cap hb"></i></a></li>
+            </ul>
+          </div>
+        </div>
+        <div class="card">
+          <div class="content"><a href="https://www.freecodecamp.org/learn/information-security/">
+              <h2>文件監控</h2></a>
+            <p>
+              監控文件系統變化，包括文件創建、修改、刪除和重命名事件，便於文件變動追蹤。
+            </p>
+            <ul class="list">
+              <li><a href="https://www.freecodecamp.org/learn" target="_blank"><i class="fab fa-free-code-camp"></i></a></li>
+              <li><a href="https://www.freecodecamp.org/learn/information-security/"><i class="fas fa-shield-alt"></i></a></li>
+              <li><a href="https://www.freecodecamp.org/news/shop" title="swag"><i class="fas fa-tshirt"></i></a></li>
+            </ul>
+          </div>
+        </div>
       </div>
-  </div>
-
-    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/vanilla-tilt/1.7.0/vanilla-tilt.min.js"></script>
+    <script>
+      VanillaTilt.init(document.querySelectorAll(".card"), {
+        max: 25,
+        speed: 400,
+        easing: "cubic-bezier(.02,.77,.43,.87)",
+        perspective: 730,
+        transition: true,
+        gyroscope: true
+      });    
+    </script>
   </body>
 </html>

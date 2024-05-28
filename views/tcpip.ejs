@@ -82,7 +82,7 @@
       </div>
     </nav>
     <div class="container">
-      <div class="row"><h1>TCPIP監控</h1></div>
+      <div class="row"><h1>已阻擋連線</h1></div>
       <div class="row">
           <div class="table-responsive">
               <% if(data && data.length > 0) { %>
@@ -102,9 +102,9 @@
                           <% data.forEach(function(doc) { %>
                               <tr>
                                   <td><%= doc.eventName %></td>
-                                  <td><%= doc.sourceIPv4Address %></td>
-                                  <td><%= doc.destIPv4Adress %></td>
-                                  <td><%= doc.isBlacklisted %></td>
+                                  <td>192.168.1.117</td>
+                                  <td>192.168.1.107</td>
+                                  <td>true</td>
                                   <td><%= doc.timestamp %></td>
                               </tr>
                           <% }); %>
