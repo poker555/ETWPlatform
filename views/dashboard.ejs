@@ -41,6 +41,12 @@
         align-items: center;
         color: #767676;
       }
+      .container-fluid {
+        width: 100%;
+        height: 100%;
+        padding: 0;
+        margin: 0;
+      }  
       .wrapper {
         width: 100%;
         height: 100%;
@@ -139,28 +145,7 @@
         font-family: "Roboto-mono", sans-serif;
         padding: 10px 20px;
       }
-      ul {
-        list-style: none;
-        width: 100%;
-        display: flex;
-        justify-content: space-evenly;
-        padding-top: 30px;
-      }
 
-      li {
-        cursor: pointer;
-        width: 30px;
-        height: 30px;
-      }
-      i {
-        color: #0a0a23;
-        font-size: 2em;
-        transition: all 0.3s ease;
-      }
-      i:hover {
-        transform: translate3d(0, -12px, 22px);
-        color: #616171;
-      }
       .material-icons-outlined {
         color: #767676;
       }
@@ -188,47 +173,34 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   </head>
   <body>
+    <div class="container-fluid">
       <div class="wrapper">
         <div class="card tryhackme">
-          <div class="content"><a href="views\ProcessMonitor.ejs">
+          <div class="content"><a href="/ProcessMonitor">
               <h2 class="tryhackme-heading">Process監控</h2></a>
             <p>
               實時監控系統進程的啟動和停止，記錄進程名稱、ID 和命令行參數，幫助分析系統活動。
             </p>
-            <ul class="list">
-              <li><a href="https://tryhackme.com/" target="_blank"><i class="fab fa-leanpub tr"></i></a></li>
-              <li><a href="https://tryhackme.com/leaderboards"><i class="fas fa-trophy tr"></i></a></li>
-              <li><a href="https://tryhackme.com/develop-rooms"><i class="fas fa-university tr"></i></a></li>
-            </ul>
           </div>
         </div>
         <div class="card hackbox">
-          <div class="content"><a href="https://academy.hackthebox.com/dashboard">
+          <div class="content"><a href="/tcpip">
               <div class="hb-heading">
                 <h2 class="hackbox-heading">TCPIP監控</h2>
               </div></a>
             <p>監控網絡流量，檢測和阻止黑名單 IP 地址的連接，保護系統安全。</p>
-            <ul class="list">
-              <li><a href="https://academy.hackthebox.com/"><i class="fas fa-cube hb"></i></a></li>
-              <li><a href="https://www.hackthebox.com/hacker/ctf"><i class="fas fa-flag hb"></i></a></li>
-              <li><a href="https://gitlab.com/" target="_blank"><i class="fas fa-graduation-cap hb"></i></a></li>
-            </ul>
           </div>
         </div>
         <div class="card">
-          <div class="content"><a href="https://www.freecodecamp.org/learn/information-security/">
+          <div class="content"><a href="/filesystemwatcher">
               <h2>文件監控</h2></a>
             <p>
               監控文件系統變化，包括文件創建、修改、刪除和重命名事件，便於文件變動追蹤。
             </p>
-            <ul class="list">
-              <li><a href="https://www.freecodecamp.org/learn" target="_blank"><i class="fab fa-free-code-camp"></i></a></li>
-              <li><a href="https://www.freecodecamp.org/learn/information-security/"><i class="fas fa-shield-alt"></i></a></li>
-              <li><a href="https://www.freecodecamp.org/news/shop" title="swag"><i class="fas fa-tshirt"></i></a></li>
-            </ul>
           </div>
         </div>
       </div>
+    </div>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/vanilla-tilt/1.7.0/vanilla-tilt.min.js"></script>
     <script>
       VanillaTilt.init(document.querySelectorAll(".card"), {

@@ -67,7 +67,16 @@ app.get("/ProcessMonitor", async (req, res) => {
       }
 
 
-      return source;
+      return {
+        processName: source.processName,
+        processId: source.processId,
+        commandLine: source.commandLine,
+        timestamp: source.timestamp,
+        eventType: source.eventType,
+        md5: source.mD5,
+        sha1: source.sHA1,
+        sha256: source.sHA256
+      };
     });
     
 
