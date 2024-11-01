@@ -18,168 +18,198 @@ app.use(
   })
 );
 
-const client = new Client({ node: "http://localhost:9200" });
+const client = new Client({ 
+  node: "http://localhost:9200",
+  auth: {
+    username: "elastic", // 替換為你的帳號
+    password: "2xX02HZSSkjCVsY=MRw5"  // 替換為你的密碼
+  }
+});
 
 app.get("/", async (req, res) => {
   try {
-    const result = await client.search({
-      
+    // 查詢 processStart 索引的統計數量
+    const processStartCount = await client.count({
+      index: 'process',
+      body: {
+        query: {
+          match: {
+            processType: 'ProcessStart'
+          }
+        }
+      }
     });
-    const hits = result.body.hits.hits;
-    const data = hits.map(hit => hit._source);
 
-    res.render("dashboard", { data });
-  } catch (error) {
-    console.error("Elasticsearch查询错误:", error);
+    // 查詢 processStop 索引的統計數量
+    const processStopCount = await client.count({
+      index: 'process',
+      body: {
+        query: {
+          match: {
+            processType: 'ProcessStop'
+          }
+        }
+      }
+    });
+
+    // 查詢 tcpip 總數
+    const tcpipCount = await client.count({
+      index: 'tcpip'
+    });
+
+    // 查詢 isBlacklisted 為 true 的 TCPIP 資料的數量
+    const tcpipBlacklistedCount = await client.count({
+      index: 'tcpip',
+      body: {
+        query: {
+          term: {
+            isBlacklisted: true
+          }
+        }
+      }
+    });
+
+    // 將統計數據傳遞給 dashboard 模板
+    const processStartTotal = processStartCount.body.count;
+    const processStopTotal = processStopCount.body.count;
+    const tcpipTotal = tcpipCount.body.count;
+    const tcpipBlacklistedTotal = tcpipBlacklistedCount.body.count;
+
     res.render("dashboard", {
-      error: "Failed to retrieve logs.",
-      data: [] // 确保在出错时传递一个空数组
+      processStartTotal,
+      processStopTotal,
+      tcpipTotal,
+      tcpipBlacklistedTotal
+    });
+  } catch (error) {
+    console.error("Elasticsearch 查詢錯誤:", error);
+    res.render("dashboard", {
+      error: "無法檢索統計數據。",
+      processStartTotal: 0,
+      processStopTotal: 0,
+      tcpipTotal: 0,
+      tcpipBlacklistedTotal: 0
     });
   }
 });
+
 
 app.get("/ProcessMonitor", async (req, res) => {
-  const sortField = req.query.sortField === 'eventType' ? 'eventType.keyword' : (req.query.sortField || "timestamp");
-  const sortOrder = req.query.sortOrder || "asc";
   try {
     const result = await client.search({
-      index: 'etw-events',
+      index: 'process',
       body: {
-        sort: [
-          {
-            [sortField]: {
-              order: sortOrder
-            }
-          }
-        ],
-        query: {
-          match_all: {}
-        },
-        size: 100 // 示例：限制返回的文档数量为100
+        query: { match_all: {} },
+        size: 100
       }
     });
 
     const hits = result.body.hits.hits;
-    const data = hits.map(hit => {
-      const source = hit._source
-      if (source.timestamp) {
-        source.timestamp = moment(source.timestamp).tz('Asia/Taipei').format('YYYY-MM-DD HH:mm:ss');
-      }
+    const data = hits.map(hit => ({
+      processName: hit._source.processName || 'N/A',
+      processID: hit._source.processID || 'N/A',
+      commandLine: hit._source.commandLine || 'N/A',
+      md5: hit._source.mD5 || null,
+      sha1: hit._source.sHA1 || null,
+      sha256: hit._source.sHA256 || null,
+      timestamp: hit._source.createTime || 'N/A',
+      eventType: hit._source.processType || 'N/A'
+    }));
 
-
-      return {
-        processName: source.processName,
-        processId: source.processId,
-        commandLine: source.commandLine,
-        timestamp: source.timestamp,
-        eventType: source.eventType,
-        md5: source.mD5,
-        sha1: source.sHA1,
-        sha256: source.sHA256
-      };
-    });
-    
-
-    // 传递数据给EJS模板
-    res.render("ProcessMonitor", { data, sortField: req.query.sortField, sortOrder });
+    res.render("ProcessMonitor", { data });
   } catch (error) {
-    console.error("Elasticsearch查询错误:", error);
+    console.error("Elasticsearch查詢錯誤:", error);
     res.render("ProcessMonitor", {
-      error: "Failed to retrieve logs.",
-      data: [], // 确保在出错时传递一个空数组
-      sortField: req.query.sortField,
-      sortOrder
+      error: "無法檢索日誌。",
+      data: []
     });
   }
 });
+
 
 
 app.get("/tcpip", async (req, res) => {
-  const sortField = req.query.sortField || "timestamp";
-  const sortOrder = req.query.sortOrder || "asc";
-  try{
-    const result = await client.search({
-      index: 'tcpip-events',
+  try {
+    // 獲取所有 TCPIP 資料並按照 createTime 排序
+    const allResults = await client.search({
+      index: 'tcpip',
       body: {
-        sort: [
-          {
-            [sortField]: {
-              order: sortOrder
-            }
-          }
-        ],
+        sort: [{ createTime: { order: "desc" } }],
+        query: { match_all: {} },
+        size: 100
+      }
+    });
+
+    // 獲取 isBlacklisted 為 true 的資料
+    const blacklistedResults = await client.search({
+      index: 'tcpip',
+      body: {
+        sort: [{ createTime: { order: "desc" } }],
         query: {
-          match_all: {}
+          term: {
+            isBlacklisted: true
+          }
         },
-        size: 100 // 示例：限制返回的文档数量为100
+        size: 100
       }
     });
 
-    const hits = result.body.hits.hits;
-    const data = hits.map(hit => {
-      const source = hit._source;
-      if (source.timestamp) {
-        source.timestamp = moment(source.timestamp).tz('Asia/Taipei').format('YYYY-MM-DD HH:mm:ss');
-      }
-      return source;
-    
-    });
-    res.render("tcpip", { data,sortField: req.query.sortField, sortOrder});
+    const allData = allResults.body.hits.hits.map(hit => ({
+      tCPIPEvent: hit._source.tCPIPEvent,
+      sourceIP: hit._source.sourceIP,
+      destIP: hit._source.destIP,
+      processID: hit._source.processID,
+      createTime: hit._source.createTime,
+      isBlacklisted: hit._source.isBlacklisted || false
+    }));
 
-  }catch(error){
-    console.error("Elasticsearch查询错误:", error);
+    const blacklistedData = blacklistedResults.body.hits.hits.map(hit => ({
+      tCPIPEvent: hit._source.tCPIPEvent,
+      sourceIP: hit._source.sourceIP,
+      destIP: hit._source.destIP,
+      processID: hit._source.processID,
+      createTime: hit._source.createTime,
+      isBlacklisted: hit._source.isBlacklisted || false
+    }));
+
+    res.render("tcpip", { allData, blacklistedData });
+  } catch (error) {
+    console.error("Elasticsearch查詢錯誤:", error);
     res.render("tcpip", {
-      error: "Failed to retrieve logs.",
-      data: [], // 确保在出错时传递一个空数组
-      sortField: req.query.sortField,
-      sortOrder
+      error: "無法檢索日誌。",
+      allData: [],
+      blacklistedData: []
     });
   }
 });
+
 
 app.get("/filesystemwatcher", async (req, res) => {
-  const sortField = req.query.sortField === 'eventType' ? 'eventType.keyword' : (req.query.sortField || "timestamp");
-  const sortOrder = req.query.sortOrder || "asc";
   try {
     const result = await client.search({
-      index: 'file-system-events',
+      index: 'filesystem', // 替換為你的索引名稱
       body: {
-        sort: [
-          {
-            [sortField]: {
-              order: sortOrder
-            }
-          }
-        ],
-        query: {
-          match_all: {}
-        },
-        size: 100 // 示例：限制返回的文档数量为100
+        query: { match_all: {} },
+        size: 100
       }
     });
 
     const hits = result.body.hits.hits;
-    const data = hits.map(hit => {
-      const source = hit._source
-      if (source.timestamp) {
-        source.timestamp = moment(source.timestamp).tz('Asia/Taipei').format('YYYY-MM-DD HH:mm:ss');
-      }
-      return source;
-    
-    });
-    res.render("filesystemwatcher", { data, sortField: req.query.sortField, sortOrder });
+    const data = hits.map(hit => ({
+      Type: hit._source.Type || 'N/A',
+      Path: hit._source.Path || 'N/A',
+      CreateTime: hit._source.CreateTime || 'N/A'
+    }));
+
+    res.render("FileSystemWatcher", { data });
   } catch (error) {
-    console.error("Elasticsearch查询错误:", error);
-    res.render("filesystemwatcher", {
-      error: "Failed to retrieve logs.",
-      data: [], // 确保在出错时传递一个空数组
-      sortField: req.query.sortField,
-      sortOrder
+    console.error("Elasticsearch 查詢錯誤:", error);
+    res.render("FileSystemWatcher", {
+      error: "無法檢索日誌。",
+      data: []
     });
   }
 });
-
-
 
 //port部分
 const port = 1234;

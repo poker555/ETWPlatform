@@ -1,128 +1,124 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>TCPIP監控 - 日誌收容系統</title>
-    <link rel="stylesheet" href="/style.css" />
-    <link
-      rel="stylesheet"
-      href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css"
-    />
-    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
-    <link
-      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
-      rel="stylesheet"
-      integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN"
-      crossorigin="anonymous"
-    />
-    <script
-      src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"
-      integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL"
-      crossorigin="anonymous"
-    ></script>
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <style>
-      .sortable {
-          cursor: pointer;
-      }
-      .asc::after {
-          content: ' ▲';
-      }
-      .desc::after {
-          content: ' ▼';
-      }
-      .modal-body {
-          word-wrap: break-word; /* 使内容自动换行 */
-
-      }
-      .clickable {
-          cursor: pointer;
-          color: #007bff /* 蓝色 */ !important;
-          text-decoration: none /* 无下划线 */ !important;
-      }
-      .clickable:hover {
-          color: #0056b3; /* 鼠标悬停时更深的蓝色 */
-      }
-
-      .navbar {
-        margin-bottom: 20px;
-        background-color: #343a40;
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TCPIP監控 - 日誌收容系統</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous" />
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL" crossorigin="anonymous"></script>
+  <style>
+    .navbar {
+      margin-bottom: 20px;
+      background-color: #343a40;
     }
     .navbar-brand, .nav-link {
-        font-size: 1.1rem; /* 統一字體大小 */
-        color: #ffffff !important;
+      font-size: 1.1rem;
+      color: #ffffff !important;
     }
     .nav-link:hover {
-        color: #c0c0c0 !important;
+      color: #c0c0c0 !important;
     }
     .nav-link.active {
       font-weight: bold;
-      color: #c0c0c0 !重要;
-      border: 2px solid #c0c0c0; /* 添加邊框 */
-      border-radius: 5px; /* 邊框圓角 */
-      padding: 5px 10px; /* 內邊距 */
-  }
+      color: #c0c0c0 !important;
+      border: 2px solid #c0c0c0;
+      border-radius: 5px;
+      padding: 5px 10px;
+    }
   </style>
-  </head>
-  <body>
-    <nav class="navbar navbar-expand-lg navbar-dark">
-      <div class="container-fluid">
-          <a class="navbar-brand" href="/">日誌收容系統</a>
-          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-              <span class="navbar-toggler-icon"></span>
-          </button>
-          <div class="collapse navbar-collapse" id="navbarNav">
-              <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-                  <li class="nav-item">
-                      <a class="nav-link" href="ProcessMonitor">Process監控</a>
-                  </li>
-                  <li class="nav-item">
-                      <a class="nav-link active" href="tcpip">TCPIP監控</a>
-                  </li>
-                  <li class="nav-item">
-                      <a class="nav-link" href="filesystemwatcher">文件監控</a>
-                  </li>
-              </ul>
-          </div>
-      </div>
-  </nav>
-    <div class="container">
-      <div class="row"><h1>TCPIP監控</h1></div>
-        <div class="row">
-          <div class="table-responsive">
-              <% if(data && data.length > 0) { %>
-                  <table class="table table-striped">
-                      <thead>
-                          <tr>
-                              <th>Event Name</th>
-                              <th>SourceIPv4Address</th>
-                              <th>DestIPv4Adress</th>
-                              <th>isBlacklisted</th>
-                              <th class="sortable <%= sortField === 'timestamp' ? sortOrder : '' %>">
-                                <a href="?sortField=timestamp&sortOrder=<%= sortField === 'timestamp' && sortOrder === 'asc' ? 'desc' : 'asc' %>">Timestamp</a>
-                              </th>
-                          </tr>
-                      </thead>
-                      <tbody>
-                          <% data.forEach(function(doc) { %>
-                              <tr>
-                                  <td><%= doc.eventName %></td>
-                                  <td><%= doc.sourceIPv4Address %></td>
-                                  <td><%= doc.destIPv4Address %></td>
-                                  <td><%= doc.isBlacklisted %></td>
-                                  <td><%= doc.timestamp %></td>
-                              </tr>
-                          <% }); %>
-                      </tbody>
-                  </table>
-              <% } else { %>
-                  <p>No data found.</p>
-              <% } %>
-          </div>
-        </div>
+</head>
+<body>
+  <nav class="navbar navbar-expand-lg navbar-dark">
+    <div class="container-fluid">
+      <a class="navbar-brand" href="/">日誌收容系統</a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+          <li class="nav-item">
+            <a class="nav-link" href="ProcessMonitor">Process監控</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link active" href="tcpip">TCPIP監控</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="filesystemwatcher">文件監控</a>
+          </li>
+        </ul>
       </div>
     </div>
-  </body>
+  </nav>
+
+  <div class="container">
+    <div class="row"><h1>TCPIP監控</h1></div>
+    <div class="row">
+      <h2>所有 TCPIP 資料（按時間排序）</h2>
+      <div class="table-responsive">
+        <% if (allData && allData.length > 0) { %>
+          <table class="table table-striped">
+            <thead>
+              <tr>
+                <th>Event Name</th>
+                <th>Source IP</th>
+                <th>Dest IP</th>
+                <th>Process ID</th>
+                <th>Is Blacklisted</th>
+                <th>Timestamp</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% allData.forEach(function(doc) { %>
+                <tr>
+                  <td><%= doc.tCPIPEvent %></td>
+                  <td><%= doc.sourceIP %></td>
+                  <td><%= doc.destIP %></td>
+                  <td><%= doc.processID %></td>
+                  <td><%= doc.isBlacklisted ? 'Yes' : 'No' %></td>
+                  <td><%= doc.createTime %></td>
+                </tr>
+              <% }); %>
+            </tbody>
+          </table>
+        <% } else { %>
+          <p>No data found.</p>
+        <% } %>
+      </div>
+    </div>
+
+    <div class="row mt-4">
+      <h2>Blacklisted 資料</h2>
+      <div class="table-responsive">
+        <% if (blacklistedData && blacklistedData.length > 0) { %>
+          <table class="table table-striped">
+            <thead>
+              <tr>
+                <th>Event Name</th>
+                <th>Source IP</th>
+                <th>Dest IP</th>
+                <th>Process ID</th>
+                <th>Is Blacklisted</th>
+                <th>Timestamp</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% blacklistedData.forEach(function(doc) { %>
+                <tr>
+                  <td><%= doc.tCPIPEvent %></td>
+                  <td><%= doc.sourceIP %></td>
+                  <td><%= doc.destIP %></td>
+                  <td><%= doc.processID %></td>
+                  <td>Yes</td>
+                  <td><%= doc.createTime %></td>
+                </tr>
+              <% }); %>
+            </tbody>
+          </table>
+        <% } else { %>
+          <p>No blacklisted data found.</p>
+        <% } %>
+      </div>
+    </div>
+  </div>
+</body>
 </html>

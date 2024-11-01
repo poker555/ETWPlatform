@@ -4,190 +4,158 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Process Monitoring</title>
-  <link rel="stylesheet" href="/style.css" />
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
-  <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous" />
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL" crossorigin="anonymous"></script>
   <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
-    @import url('https://fonts.googleapis.com/css?family=Roboto');
-    .sortable {
-      cursor: pointer;
-    }
-    .asc::after {
-      content: ' ▲';
-    }
-    .desc::after {
-      content: ' ▼';
-    }
     .modal-body {
-      word-wrap: break-word; /* 使内容自动换行 */
+      word-wrap: break-word;
     }
     .clickable {
       cursor: pointer;
-      color: #007bff /* 蓝色 */ !important;
-      text-decoration: none /* 无下划线 */ !important;
+      color: #007bff !important;
+      text-decoration: none !important;
     }
     .clickable:hover {
-      color: #0056b3; /* 鼠标悬停时更深的蓝色 */
+      color: #0056b3;
     }
     .has-sha {
-      background-color: #e0f7fa; /* 淡藍色背景 */
-      color: #00796b; /* 深綠色文字 */
+      background-color: #e0f7fa;
+      color: #00796b;
     }
     .navbar {
       margin-bottom: 20px;
       background-color: #343a40;
-  }
-  .navbar-brand, .nav-link {
-      font-size: 1.1rem; /* 統一字體大小 */
+    }
+    .navbar-brand, .nav-link {
+      font-size: 1.1rem;
       color: #ffffff !important;
-  }
-  .nav-link:hover {
+    }
+    .nav-link:hover {
       color: #c0c0c0 !important;
-  }
-  .nav-link.active {
-    font-weight: bold;
-    color: #c0c0c0 !important;
-    border: 2px solid #c0c0c0; /* 添加邊框 */
-    border-radius: 5px; /* 邊框圓角 */
-    padding: 5px 10px; /* 內邊距 */
-}
+    }
+    .nav-link.active {
+      font-weight: bold;
+      color: #c0c0c0 !important;
+      border: 2px solid #c0c0c0;
+      border-radius: 5px;
+      padding: 5px 10px;
+    }
   </style>
 </head>
 <body>
   <nav class="navbar navbar-expand-lg navbar-dark">
     <div class="container-fluid">
-        <a class="navbar-brand" href="/">日誌收容系統</a>
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-            <span class="navbar-toggler-icon"></span>
-        </button>
-        <div class="collapse navbar-collapse" id="navbarNav">
-            <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-                <li class="nav-item">
-                    <a class="nav-link active" href="ProcessMonitor">Process監控</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="tcpip">TCPIP監控</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="filesystemwatcher">文件監控</a>
-                </li>
-            </ul>
-        </div>
+      <a class="navbar-brand" href="/">日誌收容系統</a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+          <li class="nav-item">
+            <a class="nav-link active" href="ProcessMonitor">Process監控</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="tcpip">TCPIP監控</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="filesystemwatcher">文件監控</a>
+          </li>
+        </ul>
+      </div>
     </div>
   </nav>
-    <div class="container">
-        <div class="row"><h1>Process監控</h1></div>
-        <div class="row">
-            <div class="table-responsive">
-                <% if(data && data.length > 0) { %>
-                    <table class="table table-striped" id="myTable2">
-                        <thead>
-                            <tr>
-                                <th>Process Name</th>
-                                <th>Process ID</th>
-                                <th>Command Line</th>
-                                <th>SHA</th>
-                                <th class="sortable <%= sortField === 'timestamp' ? sortOrder : '' %>">
-                                    <a href="?sortField=timestamp&sortOrder=<%= sortField === 'timestamp' && sortOrder === 'asc' ? 'desc' : 'asc' %>">Timestamp</a>
-                                </th>
-                                <th class="sortable <%= sortField === 'eventType' ? sortOrder : '' %>">
-                                    <a href="?sortField=eventType&sortOrder=<%= sortField === 'eventType' && sortOrder === 'asc' ? 'desc' : 'asc' %>">Event Type</a>
-                                </th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <% data.forEach(function(doc) { %>
-                                <tr class="<%= doc.md5 || doc.sha1 || doc.sha256 ? 'has-sha' : '' %>">
-                                    <td><%= doc.processName %></td>
-                                    <td><%= doc.processId %></td>
-                                    <td class="clickable" onclick="showFullCommandLine('<%= doc.commandLine.replace(/\\/g, '\\\\') %>')">
-                                        <%= doc.commandLine.length > 50 ? doc.commandLine.substring(0, 47) + '...' : doc.commandLine %>
-                                    </td>
-                                    <td>
-                                        <% if (doc.md5 || doc.sha1 || doc.sha256) { %>
-                                            <button class="btn btn-info btn-sm" onclick="showShaDetails('<%= doc.md5 ? doc.md5.replace(/\\/g, '\\\\') : '' %>', '<%= doc.sha1 ? doc.sha1.replace(/\\/g, '\\\\') : '' %>', '<%= doc.sha256 ? doc.sha256.replace(/\\/g, '\\\\') : '' %>')">View SHA</button>
-                                        <% } else { %>
-                                            No SHA
-                                        <% } %>
-                                    </td>
-                                    <td><%= doc.timestamp %></td>
-                                    <td><%= doc.eventType %></td>
-                                </tr>
-                            <% }); %>
-                        </tbody>
-                    </table>
-                <% } else { %>
-                    <p>No data found.</p>
-                <% } %>
-            </div>
-        </div>
+  
+  <div class="container">
+    <div class="row"><h1>Process監控</h1></div>
+    <div class="row">
+      <div class="table-responsive">
+        <table class="table table-striped" id="myTable2">
+          <thead>
+            <tr>
+              <th>Process Name</th>
+              <th>Process ID</th>
+              <th>Command Line</th>
+              <th>SHA</th>
+              <th>Timestamp</th>
+              <th>Event Type</th>
+            </tr>
+          </thead>
+          <tbody id="processTableBody">
+            <% if (data && data.length > 0) { %>
+              <% data.forEach(function(doc) { %>
+                <tr class="<%= doc.md5 || doc.sha1 || doc.sha256 ? 'has-sha' : '' %>">
+                  <td><%= doc.processName %></td>
+                  <td><%= doc.processID %></td>
+                  <td class="clickable" onclick="showFullCommandLine('<%= doc.commandLine.replace(/\\/g, '\\\\') %>')">
+                    <%= doc.commandLine.length > 50 ? doc.commandLine.substring(0, 47) + '...' : doc.commandLine %>
+                  </td>
+                  <td>
+                    <% if (doc.md5 || doc.sha1 || doc.sha256) { %>
+                      <button class="btn btn-info btn-sm" onclick="showShaDetails('<%= doc.md5 %>', '<%= doc.sha1 %>', '<%= doc.sha256 %>')">View SHA</button>
+                    <% } else { %>
+                      No SHA
+                    <% } %>
+                  </td>
+                  <td><%= doc.timestamp %></td>
+                  <td><%= doc.eventType %></td>
+                </tr>
+              <% }); %>
+            <% } else { %>
+              <p>No data found.</p>
+            <% } %>
+          </tbody>
+        </table>
+      </div>
     </div>
+  </div>
 
-    <div class="modal fade" id="commandLineModal" tabindex="-1" aria-labelledby="commandLineModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="commandLineModalLabel">Command Line</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body" id="fullCommandLine">
-                    <!-- 命令行内容将在这里显示 -->
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                </div>
-            </div>
+  <div class="modal fade" id="commandLineModal" tabindex="-1" aria-labelledby="commandLineModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="commandLineModalLabel">Command Line</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
-    </div>
-
-    <div class="modal fade" id="shaDetailsModal" tabindex="-1" aria-labelledby="shaDetailsModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="shaDetailsModalLabel">SHA Details</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body" id="shaDetails">
-                    <!-- SHA 内容将在这里显示 -->
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                </div>
-            </div>
+        <div class="modal-body" id="fullCommandLine"></div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
         </div>
+      </div>
     </div>
-    <!-- 展示sha值與commandline的地方 -->
-<script>
-  function showFullCommandLine(commandLine) {
-    let content = `<strong>Command Line:</strong> ${commandLine}`;
-    document.getElementById('fullCommandLine').innerHTML = content;
-    var myModal = new bootstrap.Modal(document.getElementById('commandLineModal'), {
-        keyboard: false
-    });
-    myModal.show();
-  }
+  </div>
 
-  function showShaDetails(md5, sha1, sha256) {
-    let content = '';
-    if (md5) {
-        content += `<strong>MD5:</strong> ${md5}<br>`;
+  <div class="modal fade" id="shaDetailsModal" tabindex="-1" aria-labelledby="shaDetailsModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="shaDetailsModalLabel">SHA Details</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body" id="shaDetails"></div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function showFullCommandLine(commandLine) {
+      document.getElementById('fullCommandLine').innerHTML = `<strong>Command Line:</strong> ${commandLine}`;
+      var myModal = new bootstrap.Modal(document.getElementById('commandLineModal'), { keyboard: false });
+      myModal.show();
     }
-    if (sha1) {
-        content += `<strong>SHA1:</strong> ${sha1}<br>`;
+
+    function showShaDetails(md5, sha1, sha256) {
+      let content = '';
+      if (md5) content += `<strong>MD5:</strong> ${md5}<br>`;
+      if (sha1) content += `<strong>SHA1:</strong> ${sha1}<br>`;
+      if (sha256) content += `<strong>SHA256:</strong> ${sha256}<br>`;
+      document.getElementById('shaDetails').innerHTML = content;
+      var myModal = new bootstrap.Modal(document.getElementById('shaDetailsModal'), { keyboard: false });
+      myModal.show();
     }
-    if (sha256) {
-        content += `<strong>SHA256:</strong> ${sha256}<br>`;
-    }
-    document.getElementById('shaDetails').innerHTML = content;
-    var myModal = new bootstrap.Modal(document.getElementById('shaDetailsModal'), {
-        keyboard: false
-    });
-    myModal.show();
-  }
-</script>
+  </script>
 </body>
 </html>

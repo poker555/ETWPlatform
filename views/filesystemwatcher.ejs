@@ -4,13 +4,9 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>文件監控 - 日誌收容系統</title>
-    <link rel="stylesheet" href="/style.css" />
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
-    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous" />
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL" crossorigin="anonymous"></script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         .sortable {
             cursor: pointer;
@@ -21,13 +17,12 @@
         .desc::after {
             content: ' ▼';
         }
-        /* Navbar styles */
         .navbar {
             margin-bottom: 20px;
             background-color: #343a40;
         }
         .navbar-brand, .nav-link {
-            font-size: 1.1rem; /* 統一字體大小 */
+            font-size: 1.1rem;
             color: #ffffff !important;
         }
         .nav-link:hover {
@@ -36,9 +31,9 @@
         .nav-link.active {
             font-weight: bold;
             color: #c0c0c0 !important;
-            border: 2px solid #c0c0c0; /* 添加邊框 */
-            border-radius: 5px; /* 邊框圓角 */
-            padding: 5px 10px; /* 內邊距 */
+            border: 2px solid #c0c0c0;
+            border-radius: 5px;
+            padding: 5px 10px;
         }
     </style>
 </head>
@@ -73,21 +68,17 @@
                     <table class="table table-striped" id="myTable2">
                         <thead>
                             <tr>
-                                <th class="sortable <%= sortField === 'eventType' ? sortOrder : '' %>">
-                                    <a href="?sortField=eventType&sortOrder=<%= sortField === 'eventType' && sortOrder === 'asc' ? 'desc' : 'asc' %>">類型</a>
-                                </th>
-                                <th>位址</th>
-                                <th class="sortable <%= sortField === 'timestamp' ? sortOrder : '' %>">
-                                    <a href="?sortField=timestamp&sortOrder=<%= sortField === 'timestamp' && sortOrder === 'asc' ? 'desc' : 'asc' %>">時間</a>
-                                </th>
+                                <th class="sortable">類型</th>
+                                <th>路徑</th>
+                                <th class="sortable">時間</th>
                             </tr>
                         </thead>
                         <tbody>
                             <% data.forEach(function(doc) { %>
                                 <tr>
-                                    <td><%= doc.eventType %></td>
-                                    <td><%= doc.filePath %></td>
-                                    <td><%= doc.timestamp %></td>
+                                    <td><%= doc.Type %></td>
+                                    <td><%= doc.Path %></td>
+                                    <td><%= doc.CreateTime %></td>
                                 </tr>
                             <% }); %>
                         </tbody>
@@ -98,6 +89,5 @@
             </div>
         </div>
     </div>
-
 </body>
 </html>
