@@ -73,7 +73,7 @@ app.get("/", async (req, res) => {
     const processStartTotal = processStartCount.body.count;
     const processStopTotal = processStopCount.body.count;
     const tcpipTotal = tcpipCount.body.count;
-    const tcpipBlacklistedTotal = tcpipBlacklistedCount.body.count;
+    const tcpipBlacklistedTotal = tcpipBlacklistedCount.body.count ?? 0;
 
     res.render("dashboard", {
       processStartTotal,
