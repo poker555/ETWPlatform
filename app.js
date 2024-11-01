@@ -22,13 +22,13 @@ const client = new Client({
   node: "http://localhost:9200",
   auth: {
     username: "elastic", // 替換為你的帳號
-    password: "2xX02HZSSkjCVsY=MRw5"  // 替換為你的密碼
+    password: "ZYi7WcxwMyvQXg0IyMBj"  // 替換為你的密碼
   }
 });
 
 app.get("/", async (req, res) => {
   try {
-    // 查詢 processStart 索引的統計數量
+    // 原有的 Process 和 TCPIP 統計查詢...
     const processStartCount = await client.count({
       index: 'process',
       body: {
@@ -40,7 +40,6 @@ app.get("/", async (req, res) => {
       }
     });
 
-    // 查詢 processStop 索引的統計數量
     const processStopCount = await client.count({
       index: 'process',
       body: {
@@ -52,12 +51,10 @@ app.get("/", async (req, res) => {
       }
     });
 
-    // 查詢 tcpip 總數
     const tcpipCount = await client.count({
       index: 'tcpip'
     });
 
-    // 查詢 isBlacklisted 為 true 的 TCPIP 資料的數量
     const tcpipBlacklistedCount = await client.count({
       index: 'tcpip',
       body: {
@@ -69,17 +66,67 @@ app.get("/", async (req, res) => {
       }
     });
 
-    // 將統計數據傳遞給 dashboard 模板
-    const processStartTotal = processStartCount.body.count;
-    const processStopTotal = processStopCount.body.count;
-    const tcpipTotal = tcpipCount.body.count;
-    const tcpipBlacklistedTotal = tcpipBlacklistedCount.body.count ?? 0;
+    // 新增：檔案事件類型統計
+    const fileChangeCount = await client.count({
+      index: 'file_watcher',
+      body: {
+        query: {
+          match: {
+            type: 'Change'
+          }
+        }
+      }
+    });
 
+    const fileCreateCount = await client.count({
+      index: 'file_watcher',
+      body: {
+        query: {
+          match: {
+            type: 'Create'
+          }
+        }
+      }
+    });
+
+    const fileDeleteCount = await client.count({
+      index: 'file_watcher',
+      body: {
+        query: {
+          match: {
+            type: 'Delete'
+          }
+        }
+      }
+    });
+
+    const fileRenameCount = await client.count({
+      index: 'file_watcher',
+      body: {
+        query: {
+          match: {
+            type: 'Rename'
+          }
+        }
+      }
+    });
+
+    // 計算檔案事件總數
+    const fileTotalCount = await client.count({
+      index: 'file_watcher'
+    });
+
+    // 將所有統計數據傳遞給模板
     res.render("dashboard", {
-      processStartTotal,
-      processStopTotal,
-      tcpipTotal,
-      tcpipBlacklistedTotal
+      processStartTotal: processStartCount.body.count,
+      processStopTotal: processStopCount.body.count,
+      tcpipTotal: tcpipCount.body.count,
+      tcpipBlacklistedTotal: tcpipBlacklistedCount.body.count ?? 0,
+      fileTotal: fileTotalCount.body.count,
+      fileChangeTotal: fileChangeCount.body.count,
+      fileCreateTotal: fileCreateCount.body.count,
+      fileDeleteTotal: fileDeleteCount.body.count,
+      fileRenameTotal: fileRenameCount.body.count
     });
   } catch (error) {
     console.error("Elasticsearch 查詢錯誤:", error);
@@ -88,7 +135,11 @@ app.get("/", async (req, res) => {
       processStartTotal: 0,
       processStopTotal: 0,
       tcpipTotal: 0,
-      tcpipBlacklistedTotal: 0
+      tcpipBlacklistedTotal: 0,
+      fileTotal: 0,
+      fileChangeTotal: 0,
+      fileCreateTotal: 0,
+      fileDeleteTotal: 0
     });
   }
 });
@@ -99,6 +150,7 @@ app.get("/ProcessMonitor", async (req, res) => {
     const result = await client.search({
       index: 'process',
       body: {
+        sort: [{ createTime: { order: "desc" } }],  // 添加默認排序
         query: { match_all: {} },
         size: 100
       }
@@ -187,8 +239,9 @@ app.get("/tcpip", async (req, res) => {
 app.get("/filesystemwatcher", async (req, res) => {
   try {
     const result = await client.search({
-      index: 'filesystem', // 替換為你的索引名稱
+      index: 'file_watcher',
       body: {
+        sort: [{ createTime: { order: "desc" } }],
         query: { match_all: {} },
         size: 100
       }
@@ -196,14 +249,14 @@ app.get("/filesystemwatcher", async (req, res) => {
 
     const hits = result.body.hits.hits;
     const data = hits.map(hit => ({
-      Type: hit._source.Type || 'N/A',
-      Path: hit._source.Path || 'N/A',
-      CreateTime: hit._source.CreateTime || 'N/A'
+      type: hit._source.type || 'N/A',
+      path: hit._source.path || 'N/A',
+      createTime: moment(hit._source.createTime).format('YYYY-MM-DD HH:mm:ss') || 'N/A'
     }));
 
     res.render("FileSystemWatcher", { data });
   } catch (error) {
-    console.error("Elasticsearch 查詢錯誤:", error);
+    console.error("Elasticsearch查詢錯誤:", error);
     res.render("FileSystemWatcher", {
       error: "無法檢索日誌。",
       data: []
@@ -212,7 +265,7 @@ app.get("/filesystemwatcher", async (req, res) => {
 });
 
 //port部分
-const port = 1234;
+const port = 4500;
 app.listen(port, () => {
   console.log(`Server is running on port ${port}`);
 });

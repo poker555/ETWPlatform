@@ -4,20 +4,30 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Elasticsearch 資料統計</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous" />
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL" crossorigin="anonymous"></script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap');
+
+        body {
+            font-family: 'Noto Sans TC', sans-serif;
+            background-color: #f8f9fa;
+        }
+
         .navbar {
             margin-bottom: 20px;
             background-color: #343a40;
         }
+
         .navbar-brand, .nav-link {
             font-size: 1.1rem;
             color: #ffffff !important;
         }
+
         .nav-link:hover {
             color: #c0c0c0 !important;
         }
+
         .nav-link.active {
             font-weight: bold;
             color: #c0c0c0 !important;
@@ -25,28 +35,112 @@
             border-radius: 5px;
             padding: 5px 10px;
         }
-        body, .container, .card, p {
-            font-size: 1.5rem; /* 放大字體 */
-        }
-        h1 {
-            font-size: 2.5rem; /* 放大標題字體 */
-            font-weight: bold;
-        }
+
         .container {
             padding: 20px;
         }
+
         .card {
-            border: 1px solid #ddd;
-            border-radius: 5px;
-            margin-bottom: 20px;
-            padding: 15px;
+            border: none;
+            border-radius: 15px;
+            margin-bottom: 25px;
+            padding: 25px;
             text-align: center;
-            background-color: #f9f9f9;
+            background-color: #ffffff;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            transition: transform 0.2s;
         }
+
+        .card:hover {
+            transform: translateY(-5px);
+        }
+
+        h1 {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+            color: #2c3e50;
+        }
+
+        .stat-label {
+            font-size: 1.2rem;
+            color: #6c757d;
+            margin-bottom: 0.5rem;
+        }
+
         .stat-value {
-            color: #000;
-            font-size: 2rem; /* 放大數值字體 */
-            font-weight: bold;
+            color: #2c3e50;
+            font-size: 2rem;
+            font-weight: 700;
+            display: inline-block;
+        }
+
+        .event-type {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.5rem 1.2rem;
+            border-radius: 8px;
+            margin: 0.5rem;
+            font-weight: 500;
+            min-width: 120px;
+            justify-content: center;
+            transition: transform 0.2s;
+        }
+
+        .event-type:hover {
+            transform: scale(1.05);
+        }
+
+        .event-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 1rem;
+        }
+
+        .event-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-width: 200px;
+            padding: 15px;
+            border-radius: 10px;
+            background-color: rgba(255, 255, 255, 0.7);
+        }
+
+        .type-Change {
+            background-color: #ffd700;
+            color: #000000;
+        }
+
+        .type-Create {
+            background-color: #90EE90;
+            color: #000000;
+        }
+
+        .type-Delete {
+            background-color: #FFB6C6;
+            color: #000000;
+        }
+
+        .type-Rename {
+            background-color: #87CEEB;
+            color: #000000;
+        }
+
+        .total-count {
+            font-size: 1.3rem;
+            color: #6c757d;
+            margin-bottom: 1.5rem;
+            padding: 10px;
+            border-bottom: 2px solid #e9ecef;
+        }
+
+        .card-header-icon {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            color: #343a40;
         }
     </style>
 </head>
@@ -54,7 +148,7 @@
     <nav class="navbar navbar-expand-lg navbar-dark">
         <div class="container-fluid">
             <a class="navbar-brand" href="/">日誌收容系統</a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
@@ -75,14 +169,59 @@
 
     <div class="container">
         <div class="card">
+            <div class="card-header-icon">📊</div>
             <h1>Process 索引統計</h1>
-            <p>Process Start 資料筆數: <span class="stat-value"><%= processStartTotal %></span></p>
-            <p>Process Stop 資料筆數: <span class="stat-value"><%= processStopTotal %></span></p>
+            <div class="event-container">
+                <div class="event-item">
+                    <div class="stat-label">Process Start</div>
+                    <div class="stat-value"><%= processStartTotal %></div>
+                </div>
+                <div class="event-item">
+                    <div class="stat-label">Process Stop</div>
+                    <div class="stat-value"><%= processStopTotal %></div>
+                </div>
+            </div>
         </div>
+        
         <div class="card">
-          <h1>TCPIP 索引統計</h1>
-          <p>總資料筆數: <span class="stat-value"><%= tcpipTotal %></span></p>
-          <p>黑名單資料筆數: <span class="stat-value"><%= tcpipBlacklistedTotal %></span></p>
+            <div class="card-header-icon">🌐</div>
+            <h1>TCPIP 索引統計</h1>
+            <div class="event-container">
+                <div class="event-item">
+                    <div class="stat-label">總筆數</div>
+                    <div class="stat-value"><%= tcpipTotal %></div>
+                </div>
+                <div class="event-item">
+                    <div class="stat-label">黑名單筆數</div>
+                    <div class="stat-value"><%= tcpipBlacklistedTotal %></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header-icon">📁</div>
+            <h1>檔案監控統計</h1>
+            <div class="total-count">
+                總資料筆數：<span class="stat-value"><%= fileTotal %></span>
+            </div>
+            <div class="event-container">
+                <div class="event-item">
+                    <span class="event-type type-Change">變更</span>
+                    <div class="stat-value"><%= fileChangeTotal %></div>
+                </div>
+                <div class="event-item">
+                    <span class="event-type type-Create">新建</span>
+                    <div class="stat-value"><%= fileCreateTotal %></div>
+                </div>
+                <div class="event-item">
+                    <span class="event-type type-Delete">刪除</span>
+                    <div class="stat-value"><%= fileDeleteTotal %></div>
+                </div>
+                <div class="event-item">
+                    <span class="event-type type-Rename">重新命名</span>
+                    <div class="stat-value"><%= fileRenameTotal || 0 %></div>
+                </div>
+            </div>
         </div>
     </div>
 </body>
